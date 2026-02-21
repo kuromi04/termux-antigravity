@@ -53,6 +53,7 @@ chmod +x *.sh && \
 ## 🛡️ Seguridad y Ética (I-HAKLAB)
 
 Este proyecto es una herramienta de terceros y se distribuye bajo fines educativos. Desarrollado bajo los principios de **Ciberseguridad y Hacking Ético**.
+agradecimientos y enseñanzas para : https://github.com/ivam3
 
 **Desarrollado por @maka0024** - [kuromi04](https://www.google.com/search?q=https://github.com/kuromi04)
 
