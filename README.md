@@ -52,14 +52,16 @@ chmod +x *.sh && \
 
 
 🤝 Créditos y Agradecimientos
-Este proyecto no habría sido posible sin el apoyo y las enseñanzas de grandes referentes en la comunidad:
+Este proyecto no habría sido posible sin el apoyo y las enseñanzas de grandes referentes de la comunidad de ivam3bycinderella:
 
-[ivam3](https://github.com/ivam3): Un agradecimiento especial por compartir su conocimiento, sus scripts base y sus enseñanzas fundamentales en la optimización de entornos Linux sobre Android. Su trabajo es una inspiración para este instalador.
+[ivam3](https://github.com/ivam3): Un agradecimiento especial por compartir su conocimiento, sus scripts base y sus enseñanzas fundamentales en la optimización de entornos Linux y Ciberseguridad y Hacking Ético, con termux sobre Android. Su trabajo es una inspiración para este instalador.
 
 AnBui2004: Por los binarios iniciales del IDE.
 
 🛡️ Seguridad y Ética (I-HAKLAB)
 Este proyecto es una herramienta de terceros y se distribuye bajo fines educativos. Desarrollado bajo los principios de Ciberseguridad y Hacking Ético.
+https://github.com/ivam3/i-Haklab
+
 
 Desarrollado por @maka0024 - kuromi04
 
