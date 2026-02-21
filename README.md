@@ -1,12 +1,4 @@
-El problema es que GitHub utiliza un lenguaje llamado **Markdown**. Para que los títulos se vean grandes y los bloques de código se vean en cuadros negros, necesitas usar caracteres especiales (como `#` para títulos o triple tilde ````` para código).
 
-Aquí tienes el contenido exacto. **Asegúrate de copiar desde el primer `#` hasta el final.**
-
----
-
-### Copia este contenido para tu `README.md`:
-
-```markdown
 # 🌌 Google Antigravity for Termux (X11 Edition)
 > **AI-Powered IDE optimized for Android Environments**
 
