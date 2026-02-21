@@ -7,7 +7,7 @@
 [![Tool: Termux](https://img.shields.io/badge/Tool-Termux-orange.svg)](https://termux.dev/)
 
 Script automatizado para desplegar **Google Antigravity IDE** en Android a través de **Termux** con soporte de interfaz gráfica (X11). Diseñado para máxima productividad con agentes de IA.
-
+Automated script to deploy Google Antigravity IDE on Android via Termux with graphical interface support (X11). Designed for maximum productivity with AI agents.
 ---
 
 ## 🛠️ Instalación Rápida
