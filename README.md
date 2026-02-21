@@ -61,6 +61,6 @@ AnBui2004: Por los binarios iniciales del IDE.
 🛡️ Seguridad y Ética (I-HAKLAB)
 Este proyecto es una herramienta de terceros y se distribuye bajo fines educativos. Desarrollado bajo los principios de Ciberseguridad y Hacking Ético.
 
-Desarrollado por Andrés - kuromi04
+Desarrollado por @maka0024 - kuromi04
 
 
