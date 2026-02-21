@@ -54,21 +54,11 @@ chmod +x *.sh && \
 
 Este proyecto es una herramienta de terceros y se distribuye bajo fines educativos. Desarrollado bajo los principios de **Ciberseguridad y Hacking Ético**.
 
-**Desarrollado por Andrés** - [kuromi04](https://www.google.com/search?q=https://github.com/kuromi04)
+**Desarrollado por @maka0024** - [kuromi04](https://www.google.com/search?q=https://github.com/kuromi04)
 
 ```
 
----
 
-### 💡 Tips para que se vea perfecto en GitHub:
-
-1.  **Usa el modo "Edit":** En la página de tu repositorio, dale al lápiz (Edit).
-2.  **Borra TODO:** No dejes nada de lo que tenías antes para evitar que se mezclen los códigos.
-3.  **Pega el código de arriba:** Asegúrate de que los símbolos `#` estén al inicio de la línea.
-4.  **Dale a "Preview":** Antes de guardar, haz clic en la pestaña **Preview** arriba del cuadro de texto. Ahí verás los títulos grandes y azules, y el código en cuadros oscuros.
-5.  **Commit changes:** Si te gusta cómo se ve, dale al botón verde de "Commit changes" abajo a la derecha.
-
-¿Quieres que te explique cómo añadir una **tabla de contenidos** para que los usuarios puedan saltar directamente a cada sección?
 
 ```
 
