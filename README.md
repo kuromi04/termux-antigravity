@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://android.com)
 [![Termux](https://img.shields.io/badge/Termux-X11-f97316?style=for-the-badge&logo=gnometerminal&logoColor=white)](https://termux.dev/)
-[![ShellCheck](https://img.shields.io/badge/ShellCheck-passing-22c55e?style=for-the-badge&logo=gnubash&logoColor=white)](https://www.shellcheck.net/)
+[![ShellCheck](https://img.shields.io/github/actions/workflow/status/kuromi04/termux-antigravity/shellcheck.yml?label=ShellCheck&style=for-the-badge&logo=gnubash&logoColor=white)](https://github.com/kuromi04/termux-antigravity/actions)
 
 <br/>
 
@@ -21,8 +21,8 @@
 
 | Script | Función |
 |--------|---------|
-| `install.sh` | Instala todas las dependencias: X11, Fluxbox, PulseAudio, Node.js y el IDE |
-| `start-gui.sh` | Inicia el servidor gráfico, espera que esté listo y lanza el IDE |
+| `install.sh` | Instala todas las dependencias: X11, Fluxbox, PulseAudio, Node.js, xdpyinfo y el IDE |
+| `start-gui.sh` | Inicia el servidor gráfico, verifica que X11 esté listo y lanza el IDE |
 | `antigravity.sh` | Lanzador del IDE con fallback automático a terminal gráfica |
 | `stop-gui.sh` | Detiene limpiamente todos los procesos del entorno |
 
@@ -45,6 +45,7 @@ La instalación configura automáticamente:
 - Servidor gráfico `termux-x11`
 - Gestor de ventanas `fluxbox` con menú personalizado
 - Motor de audio `pulseaudio`
+- Utilidad `xdpyinfo` para verificación del servidor X11
 - Entorno de ejecución `Node.js` y `Python`
 - Google Antigravity IDE
 
@@ -95,10 +96,13 @@ La instalación configura automáticamente:
 
 ```
 termux-antigravity/
-├── install.sh          # Instalador principal
-├── start-gui.sh        # Inicio del entorno gráfico
-├── stop-gui.sh         # Parada limpia del entorno
-├── antigravity.sh      # Lanzador del IDE
+├── .github/
+│   └── workflows/
+│       └── shellcheck.yml  # CI con ShellCheck v4
+├── install.sh              # Instalador principal
+├── start-gui.sh            # Inicio del entorno gráfico
+├── stop-gui.sh             # Parada limpia del entorno
+├── antigravity.sh          # Lanzador del IDE
 ├── README.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -126,6 +130,19 @@ El paquete está en el repositorio `x11-repo`. Actívalo con:
 ```bash
 pkg install x11-repo -y && pkg install termux-x11-nightly -y
 ```
+
+---
+
+## 🛠️ Cambios Recientes
+
+### v1.1.0
+- **Corregido** bug crítico en `install.sh`: el heredoc `<< 'SHEOF'` impedía la expansión de `$PREFIX`, generando un script lanzador con ruta literal inválida.
+- **Corregido** bug en `install.sh`: eliminado `set -e` que abortaba la instalación cuando `pkg upgrade` no encontraba actualizaciones.
+- **Corregido** en `antigravity.sh`: eliminado `&` del fallback `xterm` para que el proceso bloquee correctamente y `start-gui.sh` no termine antes de que el IDE esté listo.
+- **Corregido** en `start-gui.sh`: eliminada variable `X11_PID` declarada y nunca usada.
+- **Añadido** `xorg-xdpyinfo` a los paquetes instalados, requerido por `start-gui.sh` para verificar que X11 esté disponible.
+- **Actualizado** workflow de ShellCheck: `actions/checkout@v3` → `@v4`, `ludeeus/action-shellcheck@master` → `@2.0.0`.
+- **Limpiado** `.gitignore`: eliminada entrada residual `installantigravity.sh`.
 
 ---
 
