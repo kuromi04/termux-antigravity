@@ -1,19 +1,36 @@
+# 🌌 Termux-Antigravity
+### *Google Antigravity IDE · Android · X11 Edition*
 
-# 🌌 Google Antigravity for Termux (X11 Edition)
-> **AI-Powered IDE optimized for Android Environments**
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform: Android](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://www.android.com)
-[![Tool: Termux](https://img.shields.io/badge/Tool-Termux-orange.svg)](https://termux.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://android.com)
+[![Termux](https://img.shields.io/badge/Termux-X11-f97316?style=for-the-badge&logo=gnometerminal&logoColor=white)](https://termux.dev/)
+[![ShellCheck](https://img.shields.io/badge/ShellCheck-passing-22c55e?style=for-the-badge&logo=gnubash&logoColor=white)](https://www.shellcheck.net/)
 
-Script automatizado para desplegar **Google Antigravity IDE** en Android a través de **Termux** con soporte de interfaz gráfica (X11). Diseñado para máxima productividad con agentes de IA.
+<br/>
 
-Automated script to deploy Google Antigravity IDE on Android via Termux with graphical interface support (X11). Designed for maximum productivity with AI agents.
+> **Convierte tu Android en una estación de desarrollo de IA completa.**  
+> Script automatizado que despliega Google Antigravity IDE con entorno gráfico X11 en Termux.
+
+</div>
+
 ---
 
-## 🛠️ Instalación Rápida
+## ✨ ¿Qué incluye?
 
-Abre **Termux** y ejecuta este bloque de comandos:
+| Script | Función |
+|--------|---------|
+| `install.sh` | Instala todas las dependencias: X11, Fluxbox, PulseAudio, Node.js y el IDE |
+| `start-gui.sh` | Inicia el servidor gráfico, espera que esté listo y lanza el IDE |
+| `antigravity.sh` | Lanzador del IDE con fallback automático a terminal gráfica |
+| `stop-gui.sh` | Detiene limpiamente todos los procesos del entorno |
+
+---
+
+## ⚡ Instalación Rápida
+
+Abre **Termux** y ejecuta:
 
 ```bash
 pkg install git -y && \
@@ -21,52 +38,122 @@ git clone https://github.com/kuromi04/termux-antigravity.git && \
 cd termux-antigravity && \
 chmod +x *.sh && \
 ./install.sh
-
 ```
+
+La instalación configura automáticamente:
+- Repositorios de paquetes X11 para Termux
+- Servidor gráfico `termux-x11`
+- Gestor de ventanas `fluxbox` con menú personalizado
+- Motor de audio `pulseaudio`
+- Entorno de ejecución `Node.js` y `Python`
+- Google Antigravity IDE
 
 ---
 
-## 🖥️ Modo de Uso
+## 🖥️ Cómo Usar
 
-1. Instala la app [Termux:X11](https://github.com/termux/termux-x11/releases) en tu dispositivo.
-2. Abre la app **Termux:X11**.
-3. Regresa a **Termux** e inicia el entorno:
+**Paso 1.** Instala la app [Termux:X11](https://github.com/termux/termux-x11/releases) en tu dispositivo Android.
+
+**Paso 2.** Abre la app **Termux:X11** (déjala en segundo plano).
+
+**Paso 3.** En **Termux**, inicia el entorno:
+
 ```bash
 ./start-gui.sh
-
 ```
 
+**Paso 4.** Cambia a la app **Termux:X11** — el escritorio con el IDE ya estará corriendo.
 
-4. Cambia de nuevo a la app **Termux:X11** para empezar a programar.
+**Paso 5.** Cuando termines, detén el entorno con:
 
----
-
-## 📋 Requisitos Recomendados
-
-| Componente | Especificación |
-| --- | --- |
-| **CPU** | Snapdragon 8+ Gen 1 o superior |
-| **RAM** | 8 GB |
-| **Pantalla** | 10.1" (Tablet recomendada) |
+```bash
+./stop-gui.sh
+```
 
 ---
 
+## 📋 Requisitos
 
-🤝 Créditos y Agradecimientos
+### Hardware Recomendado
 
-Este proyecto no habría sido posible sin el apoyo y las enseñanzas de grandes referentes de la comunidad de ivam3bycinderella:
+| Componente | Mínimo | Recomendado |
+|------------|--------|-------------|
+| **SoC** | Snapdragon 700 / Dimensity 900 | Snapdragon 8+ Gen 1 o superior |
+| **RAM** | 6 GB | 8 GB o más |
+| **Almacenamiento** | 4 GB libres | 8 GB libres |
+| **Pantalla** | 6.5" smartphone | 10.1" tablet |
+| **Android** | 10+ | 12+ |
 
-[ivam3](https://github.com/ivam3): Un agradecimiento especial por compartir su conocimiento, sus scripts base y sus enseñanzas fundamentales en la optimización de entornos Linux, Ciberseguridad y Hacking Ético con termux sobre Android. 
-Su trabajo es una inspiración para este instalador.
+### Software Requerido
 
+- [Termux](https://f-droid.org/en/packages/com.termux/) — **instalar desde F-Droid**, no desde Play Store
+- [Termux:X11](https://github.com/termux/termux-x11/releases) — app del servidor gráfico
 
+---
 
-🛡️ Seguridad y Ética (I-HAKLAB)
+## 🗂️ Estructura del Proyecto
 
-Este proyecto es una herramienta de terceros y se distribuye bajo fines educativos. Desarrollado bajo los principios de Ciberseguridad y Hacking Ético.
-https://github.com/ivam3/i-Haklab
+```
+termux-antigravity/
+├── install.sh          # Instalador principal
+├── start-gui.sh        # Inicio del entorno gráfico
+├── stop-gui.sh         # Parada limpia del entorno
+├── antigravity.sh      # Lanzador del IDE
+├── README.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+└── LICENSE
+```
 
+---
 
-Desarrollado por @maka0024 - kuromi04
+## 🔧 Solución de Problemas
 
+**La pantalla de Termux:X11 aparece en negro**  
+Asegúrate de ejecutar `./start-gui.sh` *después* de abrir la app Termux:X11. El servidor X11 necesita que la app ya esté activa.
 
+**Error: "Dependencia no encontrada"**  
+Ejecuta `./install.sh` de nuevo. Si persiste, actualiza Termux manualmente:
+```bash
+pkg update && pkg upgrade
+```
+
+**Fluxbox inicia pero el IDE no abre**  
+Haz clic derecho en el escritorio → selecciona **Antigravity IDE** en el menú contextual, o abre una terminal y ejecuta `./antigravity.sh` con `DISPLAY=:1` exportado.
+
+**`termux-x11` no se encuentra**  
+El paquete está en el repositorio `x11-repo`. Actívalo con:
+```bash
+pkg install x11-repo -y && pkg install termux-x11-nightly -y
+```
+
+---
+
+## 🤝 Contribuir
+
+¿Encontraste un bug o tienes una mejora? Lee [CONTRIBUTING.md](CONTRIBUTING.md) para saber cómo colaborar. Los Pull Requests son bienvenidos, especialmente en:
+
+- Optimización del rendimiento gráfico en dispositivos de gama media
+- Soporte para gestores de ventanas alternativos (Openbox, i3)
+- Mejoras en la detección de hardware
+
+---
+
+## 🛡️ Seguridad y Ética
+
+Este proyecto se distribuye **únicamente con fines educativos**, bajo los principios de Ciberseguridad y Hacking Ético promovidos por [I-HAKLAB](https://github.com/ivam3/i-Haklab). Consulta nuestra [política de seguridad](SECURITY.md) para reportar vulnerabilidades.
+
+---
+
+## 💜 Créditos
+
+- **[ivam3](https://github.com/ivam3)** — por sus enseñanzas, scripts base y la comunidad [ivam3bycinderella](https://github.com/ivam3). Su trabajo es la inspiración directa de este proyecto.
+- **Comunidad Termux** — por mantener un ecosistema Linux increíble en Android.
+
+---
+
+<div align="center">
+
+Desarrollado con 💜 por **[@maka0024 · kuromi04](https://github.com/kuromi04)**
+
+</div>
