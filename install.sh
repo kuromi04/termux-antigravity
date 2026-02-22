@@ -1,97 +1,109 @@
 #!/bin/sh
 
 # ============================================================
-#  Termux-Antigravity - Instalador para Alpine Linux
+#  Termux-Antigravity · Instalador para Alpine Linux (QEMU)
 #  Autor: @maka0024 (kuromi04)
 #
-#  Requisitos:
-#    - Alpine Linux corriendo dentro de Termux via Docker/QEMU
-#    - Este script se ejecuta DENTRO de Alpine (como root)
-#    - Termux:X11 ya instalado en Android
+#  EJECUTAR DENTRO DE ALPINE (como root):
+#    sh install.sh
 #
-#  Flujo:
-#    1. Instala dependencias base en Alpine (apk)
-#    2. Instala gcompat para compatibilidad con binarios glibc
-#    3. Configura el entorno gráfico X11 + Fluxbox
-#    4. Añade el repositorio oficial de Google Antigravity (APT)
-#    5. Instala Antigravity vía apt-get dentro de Alpine
+#  Qué hace:
+#    1. Instala glibc real (sgerrand ARM64) sobre Alpine/musl
+#    2. Instala el entorno gráfico X11 + Fluxbox
+#    3. Descarga el binario oficial ARM64 de Antigravity
+#    4. Genera los scripts de inicio y desinstalación
 # ============================================================
 
-# --- Colores (compatibles con sh de Alpine/busybox) ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+# --- Colores (sh de Alpine/busybox compatible) ---
+W='\033[1;37m'; G='\033[1;32m'; R='\033[1;31m'; Y='\033[1;33m'; C='\033[1;36m'; NC='\033[0m'
+info()    { printf "${C}[i]${NC} %s\n" "$1"; }
+success() { printf "${G}[✓]${NC} %s\n" "$1"; }
+warn()    { printf "${Y}[!]${NC} %s\n" "$1"; }
+error()   { printf "${R}[✗]${NC} %s\n" "$1"; exit 1; }
 
-info()    { printf "${CYAN}[INFO]${NC}  %s\n" "$1"; }
-success() { printf "${GREEN}[OK]${NC}    %s\n" "$1"; }
-warn()    { printf "${YELLOW}[WARN]${NC}  %s\n" "$1"; }
-error()   { printf "${RED}[ERROR]${NC} %s\n" "$1"; exit 1; }
+# Versión de glibc a instalar (ARM64, la más reciente disponible para Alpine)
+GLIBC_VER="2.35-r1"
+GLIBC_BASE="https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}"
+GLIBC_KEY="https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub"
 
-# --- Banner ---
-printf "${CYAN}"
-printf "  ╔══════════════════════════════════════════╗\n"
-printf "  ║   Google Antigravity · Alpine · X11      ║\n"
-printf "  ║         Instalador Automático            ║\n"
-printf "  ╚══════════════════════════════════════════╝\n"
+# URL del binario oficial de Antigravity para Linux ARM64
+ANTIGRAVITY_URL="https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/1.16.5-6703236727046144/linux-arm/Antigravity.tar.gz"
+INSTALL_DIR="/opt/antigravity"
+
+printf "\n${C}"
+printf "  ╔══════════════════════════════════════════════╗\n"
+printf "  ║  Google Antigravity · Alpine QEMU · X11     ║\n"
+printf "  ║         Instalador Automático               ║\n"
+printf "  ╚══════════════════════════════════════════════╝\n"
 printf "${NC}\n"
 
-# --- Verificar que somos root ---
-if [ "$(id -u)" -ne 0 ]; then
-    error "Este script debe ejecutarse como root dentro de Alpine."
+# --- Verificar root ---
+[ "$(id -u)" -eq 0 ] || error "Ejecuta como root dentro de Alpine."
+
+# --- Verificar Alpine ---
+[ -f /etc/alpine-release ] || error "Este script es para Alpine Linux."
+info "Alpine $(cat /etc/alpine-release) detectado."
+
+# ── PASO 1: Actualizar repositorios ────────────────────────
+info "Actualizando repositorios Alpine..."
+apk update || error "No se pudo conectar a los repositorios."
+apk upgrade || warn "Algunos paquetes no se actualizaron. Continuando..."
+
+# Habilitar repositorio community (necesario para X11/Fluxbox)
+if ! grep -q "community" /etc/apk/repositories 2>/dev/null; then
+    BASE_URL=$(grep "v[0-9]" /etc/apk/repositories | grep "main" | head -1 | sed 's|/main.*||')
+    echo "${BASE_URL}/community" >> /etc/apk/repositories
+    apk update
+    success "Repositorio community habilitado."
 fi
 
-# --- Verificar que estamos en Alpine ---
-if [ ! -f /etc/alpine-release ]; then
-    error "Este script está diseñado para Alpine Linux. Ejecuta dentro de tu contenedor Alpine."
-fi
-
-ALPINE_VER=$(cat /etc/alpine-release)
-info "Alpine Linux detectado: v${ALPINE_VER}"
-
-# ── PASO 1: Actualizar repositorios Alpine ──────────────────
-info "Actualizando repositorios de Alpine..."
-apk update || error "No se pudieron actualizar los repositorios. Verifica conexión."
-apk upgrade || warn "Algunos paquetes no pudieron actualizarse. Continuando..."
-success "Repositorios actualizados."
-
-# ── PASO 2: Instalar dependencias base ─────────────────────
+# ── PASO 2: Dependencias base ───────────────────────────────
 info "Instalando dependencias base..."
 apk add --no-cache \
-    bash \
-    curl \
-    wget \
-    git \
-    tar \
-    unzip \
-    gnupg \
-    ca-certificates \
+    bash wget curl aria2 git tar xz \
+    ca-certificates gnupg \
     || error "Fallo al instalar dependencias base."
-success "Dependencias base instaladas."
+success "Dependencias base listas."
 
-# ── PASO 3: Instalar capa de compatibilidad glibc ──────────
-# CRÍTICO: Antigravity requiere glibc >= 2.28 pero Alpine usa musl.
-# gcompat provee compatibilidad para ejecutar binarios glibc en musl.
-info "Instalando capa de compatibilidad glibc (gcompat + libstdc++)..."
-apk add --no-cache \
-    gcompat \
-    libgcc \
-    libstdc++ \
-    || error "Fallo al instalar gcompat. Antigravity no podrá ejecutarse."
-success "Compatibilidad glibc instalada."
+# ── PASO 3: Instalar glibc real (sgerrand ARM64) ────────────
+# Alpine usa musl por defecto. Antigravity requiere glibc >= 2.28.
+# El paquete sgerrand instala glibc en /usr/glibc-compat sin
+# reemplazar musl, permitiendo coexistencia de ambas librerías.
+info "Instalando glibc ${GLIBC_VER} para Alpine ARM64 (sgerrand)..."
 
-# ── PASO 4: Instalar entorno gráfico X11 + Fluxbox ─────────
+# 1. Clave de firma del repositorio
+wget -q -O /etc/apk/keys/sgerrand.rsa.pub "$GLIBC_KEY" \
+    || error "No se pudo descargar la clave GPG de sgerrand."
+
+# 2. Descargar los tres paquetes glibc
+wget -q "${GLIBC_BASE}/glibc-${GLIBC_VER}.apk"     || error "Fallo al descargar glibc."
+wget -q "${GLIBC_BASE}/glibc-bin-${GLIBC_VER}.apk" || error "Fallo al descargar glibc-bin."
+wget -q "${GLIBC_BASE}/glibc-i18n-${GLIBC_VER}.apk"|| error "Fallo al descargar glibc-i18n."
+
+# 3. Instalar (--force-overwrite resuelve conflicto con nsswitch.conf de Alpine)
+apk add --force-overwrite --no-cache \
+    "glibc-${GLIBC_VER}.apk" \
+    "glibc-bin-${GLIBC_VER}.apk" \
+    "glibc-i18n-${GLIBC_VER}.apk" \
+    || error "Fallo al instalar glibc."
+
+# 4. Configurar locale en_US.UTF-8
+/usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8 2>/dev/null || true
+
+# 5. Enlazar librerías para que el loader de glibc las encuentre
+mkdir -p /lib64
+ln -sf /usr/glibc-compat/lib/ld-linux-aarch64.so.1 /lib/ld-linux-aarch64.so.1 2>/dev/null || true
+ln -sf /usr/glibc-compat/lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1 2>/dev/null || true
+
+# 6. Libstdc++ y libgcc para dependencias C++ de Antigravity
+apk add --no-cache libstdc++ libgcc || warn "libstdc++ no disponible, puede haber errores."
+
+# Limpieza de .apk temporales
+rm -f "glibc-${GLIBC_VER}.apk" "glibc-bin-${GLIBC_VER}.apk" "glibc-i18n-${GLIBC_VER}.apk"
+success "glibc ${GLIBC_VER} instalado en /usr/glibc-compat."
+
+# ── PASO 4: Entorno gráfico X11 + Fluxbox ──────────────────
 info "Instalando entorno gráfico X11 y Fluxbox..."
-
-# Habilitar repositorios community y edge/testing para paquetes X11
-if ! grep -q "community" /etc/apk/repositories; then
-    ALPINE_MAIN=$(grep "main" /etc/apk/repositories | head -1)
-    ALPINE_BASE=$(echo "$ALPINE_MAIN" | sed 's|/main||')
-    echo "${ALPINE_BASE}/community" >> /etc/apk/repositories
-    apk update
-fi
-
 apk add --no-cache \
     xorg-server \
     xauth \
@@ -102,83 +114,114 @@ apk add --no-cache \
     mesa-gl \
     mesa-dri-gallium \
     || error "Fallo al instalar el entorno gráfico."
-success "Entorno gráfico instalado."
+success "X11 y Fluxbox instalados."
 
-# ── PASO 5: Instalar audio (opcional) ──────────────────────
+# ── PASO 5: Audio ───────────────────────────────────────────
 info "Instalando PulseAudio..."
 apk add --no-cache pulseaudio pulseaudio-utils \
     || warn "PulseAudio no pudo instalarse. El audio puede no funcionar."
 success "PulseAudio instalado."
 
-# ── PASO 6: Instalar apt-get para el repo de Google ─────────
-# Google Antigravity usa un repositorio Debian/apt, por lo que
-# necesitamos apt dentro de Alpine para instalarlo.
-info "Instalando apt para compatibilidad con repositorio Debian de Google..."
-apk add --no-cache apt || error "No se pudo instalar apt en Alpine."
-success "apt instalado."
+# ── PASO 6: Dependencias de Antigravity ────────────────────
+info "Instalando dependencias de Antigravity..."
+apk add --no-cache \
+    nss \
+    nspr \
+    at-spi2-core \
+    gtk+3.0 \
+    pango \
+    cairo \
+    glib \
+    libxcomposite \
+    libxdamage \
+    libxrandr \
+    libxkbcommon \
+    alsa-lib \
+    || warn "Algunas dependencias de UI no se instalaron. Antigravity puede mostrar advertencias."
+success "Dependencias de Antigravity instaladas."
 
-# ── PASO 7: Configurar repositorio oficial de Antigravity ──
-info "Configurando repositorio oficial de Google Antigravity..."
+# ── PASO 7: Descargar binario oficial de Antigravity ───────
+info "Descargando Google Antigravity (binario oficial ARM64)..."
+mkdir -p "$INSTALL_DIR"
+cd /tmp || error "No se pudo acceder a /tmp."
 
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | \
-    gpg --dearmor --yes -o /etc/apt/keyrings/antigravity-repo-key.gpg \
-    || error "No se pudo descargar la clave GPG de Google."
+aria2c -x 4 -s 4 -o Antigravity.tar.gz "$ANTIGRAVITY_URL" \
+    || error "Fallo al descargar Antigravity. Verifica tu conexión (~300 MB)."
 
-echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] \
-https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ \
-antigravity-debian main" | tee /etc/apt/sources.list.d/antigravity.list > /dev/null
+success "Descarga completada."
 
-apt-get update || error "Fallo al actualizar el índice apt de Antigravity."
-success "Repositorio de Antigravity configurado."
+# ── PASO 8: Extraer e instalar ─────────────────────────────
+info "Extrayendo Antigravity en ${INSTALL_DIR}..."
+tar -xzf Antigravity.tar.gz -C "$INSTALL_DIR" --strip-components=1 \
+    || error "Fallo al extraer el archivo."
+rm -f /tmp/Antigravity.tar.gz
+chmod +x "${INSTALL_DIR}/bin/antigravity"
+success "Antigravity instalado en ${INSTALL_DIR}."
 
-# ── PASO 8: Instalar Google Antigravity ────────────────────
-info "Instalando Google Antigravity IDE..."
-apt-get install -y antigravity || error "Fallo al instalar Antigravity."
-success "Google Antigravity instalado correctamente."
+# ── PASO 9: Script lanzador principal ──────────────────────
+info "Creando script de inicio /usr/local/bin/start-antigravity..."
+cat > /usr/local/bin/start-antigravity << 'EOF'
+#!/bin/sh
+# ── Lanzador de Google Antigravity para Alpine/QEMU ──
+export DISPLAY="${DISPLAY:-:1}"
+export PULSE_SERVER="${PULSE_SERVER:-127.0.0.1}"
+# Asegurar que glibc-compat está en el path de librerías
+export LD_LIBRARY_PATH="/usr/glibc-compat/lib:${LD_LIBRARY_PATH}"
 
-# ── PASO 9: Configurar Fluxbox ─────────────────────────────
+echo "[Antigravity] Iniciando..."
+exec /opt/antigravity/bin/antigravity --no-sandbox "$@"
+EOF
+chmod +x /usr/local/bin/start-antigravity
+success "Lanzador creado."
+
+# ── PASO 10: Configurar Fluxbox ────────────────────────────
 info "Configurando Fluxbox..."
-mkdir -p ~/.fluxbox
-if [ ! -f ~/.fluxbox/menu ]; then
-    cat > ~/.fluxbox/menu << 'MENUEOF'
-[begin] (Antigravity Menu)
+mkdir -p /root/.fluxbox
+cat > /root/.fluxbox/menu << 'MENUEOF'
+[begin] (Antigravity)
+    [exec] (Iniciar Antigravity) {start-antigravity}
     [exec] (Terminal) {xterm}
-    [exec] (Antigravity IDE) {antigravity --no-sandbox}
     [separator]
     [submenu] (Sistema)
         [exec] (Salir) {fluxbox-remote quit}
     [end]
 [end]
 MENUEOF
-    success "Menú de Fluxbox configurado."
-fi
+success "Fluxbox configurado."
 
-# ── PASO 10: Crear script de lanzamiento rápido ────────────
-# start-gui.sh se ejecuta desde Termux (fuera de Alpine)
-# antigravity.sh se ejecuta dentro de Alpine con DISPLAY apuntando a X11
-
-info "Creando script de inicio rápido /usr/local/bin/start-antigravity..."
-cat > /usr/local/bin/start-antigravity << 'STARTEOF'
+# ── PASO 11: Script de desinstalación ──────────────────────
+cat > /usr/local/bin/uninstall-antigravity << 'EOF'
 #!/bin/sh
-export DISPLAY="${DISPLAY:-:1}"
-export PULSE_SERVER=127.0.0.1
-# --no-sandbox es necesario para entornos sin kernel de seguridad completo
-exec antigravity --no-sandbox "$@"
-STARTEOF
-chmod +x /usr/local/bin/start-antigravity
-success "Script de inicio creado."
+printf "\033[1;37m¿Desinstalar Google Antigravity?\033[0m\n"
+printf "1. Desinstalar conservando datos de usuario\n"
+printf "2. Desinstalar eliminando todos los datos\n"
+printf "Otro. Cancelar\n"
+read -r opt
+case "$opt" in
+    1)
+        rm -rf /opt/antigravity
+        rm -f /usr/local/bin/start-antigravity
+        printf "\033[1;32m[✓] Antigravity desinstalado (datos conservados).\033[0m\n"
+        ;;
+    2)
+        rm -rf /opt/antigravity /root/.config/Google/Antigravity
+        rm -f /usr/local/bin/start-antigravity
+        printf "\033[1;32m[✓] Antigravity desinstalado (datos eliminados).\033[0m\n"
+        ;;
+    *)
+        printf "Cancelado.\n"
+        ;;
+esac
+EOF
+chmod +x /usr/local/bin/uninstall-antigravity
 
 # ── Resumen ─────────────────────────────────────────────────
-printf "\n"
-printf "${GREEN}══════════════════════════════════════════════${NC}\n"
-printf "${GREEN}  ✅ Instalación completada exitosamente!${NC}\n"
-printf "${GREEN}══════════════════════════════════════════════${NC}\n"
-printf "\n"
-printf "  ${CYAN}Próximos pasos (desde Termux, fuera de Alpine):${NC}\n"
-printf "  1. Abre la app Termux:X11 en tu dispositivo.\n"
-printf "  2. Ejecuta: ./start-gui.sh\n"
-printf "  3. Cambia a Termux:X11 para ver el escritorio.\n"
-printf "\n"
-printf "  ${YELLOW}Nota:${NC} Antigravity requiere cuenta de Google al primer inicio.\n"
-printf "\n"
+printf "\n${G}══════════════════════════════════════════════${NC}\n"
+printf "${G}  ✅ Instalación completada exitosamente!${NC}\n"
+printf "${G}══════════════════════════════════════════════${NC}\n\n"
+printf "  ${C}Desde Termux (fuera de Alpine), ejecuta:${NC}\n\n"
+printf "      ${Y}./start-gui.sh${NC}\n\n"
+printf "  Esto abrirá X11 y lanzará Antigravity\n"
+printf "  automáticamente en la app Termux:X11.\n\n"
+printf "  ${W}Para desinstalar (dentro de Alpine):${NC}\n"
+printf "      uninstall-antigravity\n\n"

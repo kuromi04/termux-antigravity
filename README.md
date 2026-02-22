@@ -1,5 +1,5 @@
 # 🌌 Termux-Antigravity
-### *Google Antigravity IDE · Alpine Linux · X11 Edition*
+### *Google Antigravity IDE · Alpine Linux · QEMU · X11*
 
 <div align="center">
 
@@ -11,8 +11,8 @@
 
 <br/>
 
-> **Convierte tu Android en una estación de desarrollo con Google Antigravity IDE.**  
-> Despliega Antigravity sobre Alpine Linux (Docker/QEMU en Termux) con entorno gráfico X11 completo.
+> **Google Antigravity IDE funcionando en Android sobre Alpine Linux.**  
+> Usa QEMU en Termux, instala glibc real sobre Alpine y lanza el IDE con interfaz gráfica X11.
 
 </div>
 
@@ -23,28 +23,103 @@
 ```
 Android
 └── Termux
-    ├── Termux:X11  ← servidor gráfico (display :1)
-    ├── PulseAudio  ← audio
-    ├── start-gui.sh / antigravity.sh  ← orquestación
-    └── Docker / QEMU / proot
+    ├── Termux:X11  ──────────────────── display :1
+    ├── PulseAudio  ──────────────────── audio
+    ├── start-gui.sh / antigravity.sh  ─ orquestación
+    └── QEMU
         └── Alpine Linux
-            ├── gcompat + libstdc++  ← compatibilidad glibc
-            ├── Fluxbox              ← gestor de ventanas
-            └── Google Antigravity  ← IDE (repo oficial Google)
+            ├── glibc 2.35 (sgerrand) ─ compatibilidad con binarios glibc
+            ├── Fluxbox               ─ gestor de ventanas
+            └── /opt/antigravity/
+                └── bin/antigravity --no-sandbox
 ```
 
-> **¿Por qué Alpine?** Es la distro más ligera disponible en Termux Docker/QEMU.  
-> **¿Por qué gcompat?** Antigravity requiere glibc ≥ 2.28, pero Alpine usa musl libc. `gcompat` provee la capa de compatibilidad necesaria.
+### ¿Por qué glibc manual y no gcompat?
+
+| | `gcompat` | `glibc` (sgerrand) |
+|--|-----------|-------------------|
+| **Compatibilidad** | Parcial (solo API básica) | Completa (todas las libs de glibc) |
+| **Antigravity** | ⚠️ Puede fallar con NSS/GTK | ✅ Funciona correctamente |
+| **Tamaño** | ~1 MB | ~8 MB |
+| **Estabilidad** | Media | Alta |
 
 ---
 
-## ✨ ¿Qué incluye?
+## ⚡ Instalación
 
-| Script | Dónde se ejecuta | Función |
-|--------|-----------------|---------|
-| `install.sh` | **Dentro de Alpine** (como root) | Instala gcompat, X11, Fluxbox, el repo oficial de Google y Antigravity |
-| `start-gui.sh` | **Termux** | Inicia Termux:X11 y PulseAudio, luego lanza `antigravity.sh` |
-| `antigravity.sh` | **Termux** | Detecta Docker / proot / chroot y lanza Antigravity dentro de Alpine con `DISPLAY=:1` |
+### Requisitos previos en Termux
+
+```bash
+pkg install termux-x11-nightly pulseaudio xdpyinfo openssh -y
+```
+
+### Paso 1 — Dentro de Alpine (como root)
+
+Copia el instalador a tu Alpine y ejecútalo:
+
+```bash
+# Desde Termux, copiar install.sh a Alpine via scp:
+scp -P 2222 install.sh root@127.0.0.1:/root/
+
+# Entrar a Alpine:
+ssh -p 2222 root@127.0.0.1
+
+# Dentro de Alpine:
+sh install.sh
+```
+
+El instalador hace automáticamente:
+
+1. Habilita el repositorio `community` de Alpine
+2. Instala **glibc 2.35** real (paquete `sgerrand` ARM64) en `/usr/glibc-compat`
+3. Configura el loader `ld-linux-aarch64.so.1` para que los binarios glibc lo encuentren
+4. Instala `xorg-server`, `fluxbox`, `xterm` y todas las dependencias de Antigravity
+5. Descarga el **binario oficial ARM64** de Antigravity vía `aria2c` (~300 MB)
+6. Crea `/usr/local/bin/start-antigravity` con las variables de entorno correctas
+
+### Paso 2 — Desde Termux (cada vez que quieras usar el IDE)
+
+```bash
+./start-gui.sh
+```
+
+Cambia a la app **Termux:X11** para ver el escritorio con Antigravity.
+
+---
+
+## 🖥️ Uso Diario
+
+```bash
+# Iniciar
+./start-gui.sh
+
+# Detener
+./stop-gui.sh
+```
+
+### Menú de Fluxbox
+
+Haz **clic derecho** en el escritorio para acceder al menú:
+
+```
+┌─────────────────────────┐
+│ Iniciar Antigravity     │
+│ Terminal                │
+├─────────────────────────┤
+│ Sistema                 │
+│  └─ Salir               │
+└─────────────────────────┘
+```
+
+---
+
+## 📋 Scripts del Repositorio
+
+| Script | Dónde ejecutar | Función |
+|--------|---------------|---------|
+| `install.sh` | **Dentro de Alpine** (root) | Instala glibc, X11, Fluxbox y Antigravity |
+| `start-gui.sh` | **Termux** | Inicia X11, PulseAudio y lanza Antigravity en Alpine |
+| `antigravity.sh` | **Termux** | Conecta a Alpine vía SSH/proot y lanza el IDE |
 | `stop-gui.sh` | **Termux** | Detiene Antigravity, Fluxbox, X11 y PulseAudio |
 
 ---
@@ -65,78 +140,8 @@ Android
 
 - [Termux](https://f-droid.org/en/packages/com.termux/) — **instalar desde F-Droid**, no desde Play Store
 - [Termux:X11](https://github.com/termux/termux-x11/releases) — servidor gráfico para Android
-- Alpine Linux corriendo dentro de Termux vía **Docker**, **QEMU** o **proot**
-
----
-
-## ⚡ Instalación
-
-### Paso 1 — Preparar Termux
-
-Instala las dependencias del lado de Termux:
-
-```bash
-pkg install termux-x11-nightly pulseaudio xdpyinfo git -y
-```
-
-Clona el repositorio:
-
-```bash
-git clone https://github.com/kuromi04/termux-antigravity.git
-cd termux-antigravity
-chmod +x *.sh
-```
-
-### Paso 2 — Instalar dentro de Alpine
-
-Entra a tu contenedor Alpine y ejecuta el instalador como root:
-
-```bash
-# Si usas Docker:
-docker exec -it <nombre-contenedor> sh
-# Si usas proot/QEMU:
-# entra a tu Alpine normalmente
-
-# Dentro de Alpine:
-cd /ruta/a/termux-antigravity
-sh install.sh
-```
-
-El instalador hace automáticamente:
-
-1. Actualiza repositorios de Alpine y habilita `community`
-2. Instala `gcompat + libgcc + libstdc++` para compatibilidad con binarios glibc
-3. Instala el entorno gráfico: `xorg-server`, `xdpyinfo`, `xterm`, `fluxbox`
-4. Instala `pulseaudio` para audio
-5. Agrega el **repositorio oficial de Google Antigravity** con su clave GPG
-6. Instala Antigravity vía `apt-get`
-7. Crea el script `/usr/local/bin/start-antigravity` con las flags necesarias
-
----
-
-## 🖥️ Uso Diario
-
-Una vez instalado, el flujo es siempre desde **Termux**:
-
-**1.** Abre la app **Termux:X11** en tu dispositivo (déjala en segundo plano).
-
-**2.** En Termux, ejecuta:
-
-```bash
-./start-gui.sh
-```
-
-**3.** Cambia a la app **Termux:X11** — verás el escritorio Fluxbox con Antigravity abierto.
-
-**4.** Al terminar:
-
-```bash
-./stop-gui.sh
-```
-
-### Acceso al menú de Fluxbox
-
-Haz **clic derecho** en el escritorio para abrir el menú contextual con acceso rápido a la terminal y al IDE.
+- **QEMU** con Alpine Linux ya configurado en Termux
+- `openssh` corriendo dentro de Alpine (para que `antigravity.sh` pueda conectarse)
 
 ---
 
@@ -146,11 +151,11 @@ Haz **clic derecho** en el escritorio para abrir el menú contextual con acceso 
 termux-antigravity/
 ├── .github/
 │   └── workflows/
-│       └── shellcheck.yml  # CI con ShellCheck (actions/checkout@v4)
-├── install.sh              # Instalador para Alpine Linux (ejecutar dentro del contenedor)
-├── start-gui.sh            # Inicio del entorno desde Termux
-├── stop-gui.sh             # Parada limpia del entorno
-├── antigravity.sh          # Lanzador inteligente (Docker / proot / chroot)
+│       └── shellcheck.yml
+├── install.sh       # Instalador para Alpine (ejecutar dentro del contenedor)
+├── start-gui.sh     # Inicio del entorno desde Termux
+├── antigravity.sh   # Lanzador: Termux → Alpine vía SSH/proot
+├── stop-gui.sh      # Parada limpia del entorno
 ├── README.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -161,79 +166,81 @@ termux-antigravity/
 
 ## 🔧 Solución de Problemas
 
-**La pantalla de Termux:X11 aparece en negro**  
-Asegúrate de abrir la app Termux:X11 *antes* de ejecutar `./start-gui.sh`. El servidor necesita estar activo primero.
-
-**Error: "Dependencia no encontrada" al ejecutar `start-gui.sh`**  
-Instala las dependencias en Termux:
+**`antigravity.sh` dice "No se pudo conectar a Alpine"**  
+Verifica que `sshd` está corriendo dentro de Alpine:
 ```bash
-pkg install termux-x11-nightly pulseaudio xdpyinfo -y
+# Dentro de Alpine:
+apk add openssh
+rc-service sshd start
+# O si tu QEMU usa otro puerto, edita la variable QEMU_SSH_PORTS en antigravity.sh
 ```
 
-**Antigravity abre pero muestra error de librerías**  
-Dentro de Alpine, verifica que gcompat esté instalado:
+**Error al instalar glibc: "trying to overwrite etc/nsswitch.conf"**  
+El instalador ya usa `--force-overwrite`, pero si lo instalas manualmente:
 ```bash
-apk add gcompat libgcc libstdc++
+apk add --force-overwrite glibc-2.35-r1.apk
 ```
 
-**Error: "No se detectó ningún método válido" en `antigravity.sh`**  
-El script busca Docker, proot y chroot en ese orden. Verifica que tu contenedor Alpine esté corriendo:
+**Antigravity arranca pero la ventana no aparece en Termux:X11**  
+Asegúrate de que la app Termux:X11 esté abierta antes de ejecutar `./start-gui.sh`. Luego:
 ```bash
-# Docker:
-docker ps
-# proot: verifica que el directorio ~/alpine (o similar) exista y tenga /etc/alpine-release
+./stop-gui.sh && ./start-gui.sh
 ```
 
-**Antigravity no arranca dentro del contenedor**  
-Usa siempre el flag `--no-sandbox`. En entornos sin namespaces completos (Docker/QEMU sobre Android) es obligatorio:
+**Error de librería al iniciar Antigravity**  
+El binario necesita `LD_LIBRARY_PATH` apuntando a glibc-compat. Dentro de Alpine:
 ```bash
-antigravity --no-sandbox
+export LD_LIBRARY_PATH=/usr/glibc-compat/lib:$LD_LIBRARY_PATH
+start-antigravity --no-sandbox
 ```
 
-**`termux-x11` no se encuentra**  
+**`termux-x11` no se encuentra en Termux**  
 ```bash
 pkg install x11-repo -y && pkg install termux-x11-nightly -y
 ```
 
 ---
 
-## 🛠️ Cambios Recientes
+## 🛠️ Changelog
 
-### v2.0.0 — Migración a Alpine Linux
-- **Nuevo** soporte oficial para Alpine Linux dentro de Termux Docker/QEMU.
-- **Nuevo** `install.sh` completamente reescrito para Alpine: usa `apk`, instala `gcompat` para compatibilidad glibc, configura el repositorio Debian oficial de Google con clave GPG y usa `apt-get` para instalar Antigravity.
-- **Nuevo** `antigravity.sh` con detección automática del método de virtualización: Docker → proot → chroot.
-- **Nuevo** script `/usr/local/bin/start-antigravity` creado en Alpine con `--no-sandbox` preconfigurado.
-- **Corregido** `stop-gui.sh`: ahora también detiene Antigravity dentro del contenedor Docker si está activo.
+### v4.0.0 — Alpine QEMU + glibc real
+- **Nuevo** instalador específico para Alpine Linux sobre QEMU en Termux.
+- **Nuevo** instalación de **glibc 2.35 real** (paquete `sgerrand` ARM64) en lugar de `gcompat`, con soporte completo de NSS, GTK y librerías C++ requeridas por Antigravity.
+- **Nuevo** configuración automática del loader `ld-linux-aarch64.so.1` en `/lib` y `/lib64`.
+- **Nuevo** `antigravity.sh` con detección automática de Alpine vía SSH (puertos QEMU estándar) con fallback a proot.
+- **Nuevo** `stop-gui.sh` envía señal de parada a Alpine vía SSH antes de cerrar X11.
+- **Nuevo** menú de Fluxbox integrado con acceso directo a Antigravity y terminal.
+- **Nuevo** script `/usr/local/bin/uninstall-antigravity` dentro de Alpine con opción de conservar o eliminar datos.
+
+### v3.0.0
+- Reescritura completa basada en `proot-distro` + Debian con binario oficial ARM64.
 
 ### v1.1.0
-- Corregido bug crítico de heredoc `<< 'SHEOF'` que impedía expansión de `$PREFIX`.
-- Eliminado `set -e` que abortaba la instalación si `pkg upgrade` no encontraba actualizaciones.
-- Corregido `antigravity.sh`: eliminado `&` del fallback xterm para que el proceso bloquee correctamente.
-- Añadido `xorg-xdpyinfo` como dependencia instalada.
-- Actualizado workflow ShellCheck a `actions/checkout@v4` y `ludeeus/action-shellcheck@2.0.0`.
+- Corrección de bug crítico heredoc `<< 'SHEOF'`.
+- Eliminación de `set -e` problemático con `pkg upgrade`.
 
 ---
 
 ## 🤝 Contribuir
 
-¿Encontraste un bug o tienes una mejora? Lee [CONTRIBUTING.md](CONTRIBUTING.md). Los Pull Requests son bienvenidos, especialmente en:
+¿Encontraste un bug o tienes una mejora? Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos, especialmente para:
 
-- Soporte para otras distribuciones dentro de Docker/QEMU (Debian, Ubuntu)
+- Soporte a versiones nuevas de Antigravity (actualización del binario ARM64)
+- Configuración automática de SSH dentro de Alpine durante la instalación
 - Optimización del rendimiento gráfico en gama media
-- Soporte para gestores de ventanas alternativos (Openbox, i3)
 
 ---
 
 ## 🛡️ Seguridad y Ética
 
-Este proyecto se distribuye **únicamente con fines educativos**, bajo los principios de Ciberseguridad y Hacking Ético promovidos por [I-HAKLAB](https://github.com/ivam3/i-Haklab). Consulta nuestra [política de seguridad](SECURITY.md) para reportar vulnerabilidades.
+Este proyecto se distribuye **únicamente con fines educativos**, bajo los principios de Ciberseguridad y Hacking Ético promovidos por [I-HAKLAB](https://github.com/ivam3/i-Haklab). Consulta [SECURITY.md](SECURITY.md) para reportar vulnerabilidades.
 
 ---
 
 ## 💜 Créditos
 
-- **[ivam3](https://github.com/ivam3)** — por sus enseñanzas, scripts base y la comunidad [ivam3bycinderella](https://github.com/ivam3). Su trabajo es la inspiración directa de este proyecto.
+- **[ivam3](https://github.com/ivam3)** — por sus enseñanzas y la comunidad [ivam3bycinderella](https://github.com/ivam3).
+- **[sgerrand](https://github.com/sgerrand/alpine-pkg-glibc)** — por el paquete glibc para Alpine.
 - **Comunidad Termux** — por mantener un ecosistema Linux increíble en Android.
 - **Google** — por el [repositorio oficial de Antigravity](https://antigravity.google/download/linux).
 
