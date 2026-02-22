@@ -15,7 +15,9 @@ if command -v antigravity &>/dev/null; then
 elif command -v antigravity-ide &>/dev/null; then
     echo "[Antigravity] Lanzando mediante antigravity-ide..."
     antigravity-ide
-# Fallback: terminal xterm con mensaje informativo
+# Fallback: terminal xterm
+# CORRECCIÓN: sin & para que el proceso bloquee y start-gui.sh
+# no finalice antes de que el IDE esté corriendo
 else
     echo "[Antigravity] IDE no encontrado. Abriendo terminal de desarrollo..."
     xterm \
@@ -24,5 +26,5 @@ else
         -bg '#1e1e2e' \
         -fg '#cdd6f4' \
         -title "Antigravity Dev Terminal" \
-        -e bash --login &
+        -e bash --login
 fi

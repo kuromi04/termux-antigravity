@@ -7,14 +7,12 @@
 #               Antigravity IDE en Termux para Android.
 # ============================================================
 
-set -e  # Salir si cualquier comando falla
-
 # --- Colores para output ---
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # Sin color
+NC='\033[0m'
 
 # --- Funciones de log ---
 info()    { echo -e "${CYAN}[INFO]${NC}  $1"; }
@@ -37,7 +35,12 @@ fi
 
 # --- Actualizar repositorios ---
 info "Actualizando repositorios de paquetes..."
-pkg update -y && pkg upgrade -y || error "No se pudo actualizar los repositorios."
+# No usamos set -e porque pkg upgrade puede retornar código != 0
+# si no hay nada que actualizar, abortando la instalación innecesariamente.
+if ! pkg update -y; then
+    error "No se pudo actualizar los repositorios. Verifica tu conexión."
+fi
+pkg upgrade -y || warn "Algunos paquetes no pudieron actualizarse. Continuando..."
 success "Repositorios actualizados."
 
 # --- Instalar dependencias base ---
@@ -57,6 +60,7 @@ info "Instalando entorno gráfico (X11 + Fluxbox)..."
 pkg install -y \
     termux-x11-nightly \
     xorg-xauth \
+    xorg-xdpyinfo \
     fluxbox \
     xterm \
     || error "Fallo al instalar el entorno gráfico."
@@ -67,7 +71,7 @@ info "Instalando soporte de audio (PulseAudio)..."
 pkg install -y pulseaudio || warn "PulseAudio no pudo instalarse. El audio puede no funcionar."
 success "PulseAudio instalado."
 
-# --- Instalar dependencias de Google Antigravity IDE ---
+# --- Instalar dependencias del IDE (Node.js, Python) ---
 info "Instalando dependencias del IDE (Node.js, Python)..."
 pkg install -y \
     nodejs \
@@ -82,8 +86,9 @@ if npm install -g @google/antigravity 2>/dev/null; then
     success "Google Antigravity instalado vía npm."
 else
     warn "No se encontró paquete npm oficial. Configurando lanzador genérico..."
-    # Crear script de lanzador genérico si el paquete no está disponible
+
     mkdir -p "$PREFIX/lib/antigravity"
+
     cat > "$PREFIX/lib/antigravity/main.js" << 'JSEOF'
 const { execSync } = require('child_process');
 console.log("[Antigravity] Iniciando entorno de desarrollo...");
@@ -93,31 +98,16 @@ try {
     console.error("[Antigravity] Error al iniciar:", e.message);
 }
 JSEOF
-    cat > "$PREFIX/bin/antigravity-ide" << 'SHEOF'
+
+    # CORRECCIÓN: heredoc sin comillas para que $PREFIX se expanda
+    # y el script generado use la ruta real, no el literal '$PREFIX'
+    cat > "$PREFIX/bin/antigravity-ide" << SHEOF
 #!/data/data/com.termux/files/usr/bin/bash
 node "$PREFIX/lib/antigravity/main.js"
 SHEOF
     chmod +x "$PREFIX/bin/antigravity-ide"
-    success "Lanzador genérico creado."
+    success "Lanzador genérico creado en $PREFIX/bin/antigravity-ide."
 fi
-
-# --- Crear script antigravity.sh ---
-info "Generando script de lanzamiento antigravity.sh..."
-cat > "$(pwd)/antigravity.sh" << 'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-
-# Lanzar Google Antigravity IDE
-if command -v antigravity &>/dev/null; then
-    antigravity
-elif command -v antigravity-ide &>/dev/null; then
-    antigravity-ide
-else
-    echo "[Antigravity] Abriendo terminal de desarrollo en X11..."
-    xterm -fa 'Monospace' -fs 12 -title "Antigravity IDE" &
-fi
-EOF
-chmod +x "$(pwd)/antigravity.sh"
-success "antigravity.sh creado."
 
 # --- Configurar Fluxbox (menú básico) ---
 info "Configurando Fluxbox..."
@@ -139,7 +129,6 @@ else
     info "Configuración de Fluxbox ya existe, omitiendo."
 fi
 
-# --- Configurar inicio automático de Fluxbox ---
 if [ ! -f ~/.fluxbox/startup ]; then
     cat > ~/.fluxbox/startup << 'STARTEOF'
 #!/data/data/com.termux/files/usr/bin/bash

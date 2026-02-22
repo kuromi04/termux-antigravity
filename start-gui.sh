@@ -18,7 +18,7 @@ warn()    { echo -e "${YELLOW}[WARN]${NC}  $1"; }
 error()   { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
 # --- Verificar dependencias necesarias ---
-for cmd in termux-x11 fluxbox pulseaudio; do
+for cmd in termux-x11 fluxbox pulseaudio xdpyinfo; do
     if ! command -v "$cmd" &>/dev/null; then
         error "Dependencia no encontrada: '$cmd'. Ejecuta primero: ./install.sh"
     fi
@@ -34,7 +34,8 @@ success "Procesos anteriores terminados."
 
 # --- Iniciar servidor de audio ---
 info "Iniciando PulseAudio..."
-pulseaudio --start --exit-idle-time=-1 --daemonize=true 2>/dev/null || warn "PulseAudio no pudo iniciarse. Continuando sin audio."
+pulseaudio --start --exit-idle-time=-1 --daemonize=true 2>/dev/null \
+    || warn "PulseAudio no pudo iniciarse. Continuando sin audio."
 
 # --- Variables de entorno X11 ---
 export DISPLAY=:1
@@ -43,8 +44,8 @@ export XDG_RUNTIME_DIR="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
 
 # --- Iniciar servidor X11 ---
 info "Iniciando servidor Termux:X11 en display :1 ..."
+# CORRECCIÓN: X11_PID eliminado, era una variable declarada y nunca usada
 termux-x11 :1 &>/dev/null &
-X11_PID=$!
 
 # Esperar hasta que X11 esté listo (máx 15 segundos)
 MAX_WAIT=15
