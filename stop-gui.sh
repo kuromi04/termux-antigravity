@@ -11,6 +11,16 @@ NC='\033[0m'
 
 echo -e "${YELLOW}[*] Deteniendo entorno gráfico...${NC}"
 
+# Detener Antigravity dentro del contenedor si está corriendo vía Docker
+if command -v docker &>/dev/null; then
+    CONTAINER=$(docker ps --filter "ancestor=alpine" --format "{{.Names}}" | head -1)
+    if [ -n "$CONTAINER" ]; then
+        docker exec "$CONTAINER" sh -c "pkill -f antigravity 2>/dev/null || true" 2>/dev/null
+        docker exec "$CONTAINER" sh -c "pkill fluxbox 2>/dev/null || true" 2>/dev/null
+    fi
+fi
+
+# Detener procesos en Termux
 pkill -f antigravity 2>/dev/null || true
 pkill fluxbox        2>/dev/null || true
 pkill termux-x11     2>/dev/null || true
