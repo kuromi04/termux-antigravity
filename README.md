@@ -11,8 +11,9 @@
 
 <br/>
 
-> **Instala Google Antigravity IDE en Android con un solo comando.**  
-> Corre Debian dentro de Termux con `proot-distro`, descarga el binario oficial ARM64 y lanza el IDE con interfaz gráfica X11.
+> **Google Antigravity IDE en Android con un solo comando.**  
+> Corre Debian dentro de Termux vía `proot-distro`, descarga el binario oficial ARM64  
+> y gestiona todo desde un menú interactivo profesional.
 
 </div>
 
@@ -33,6 +34,70 @@ curl -H 'Cache-Control: no-cache' -o installantigravity.sh \
 
 ---
 
+## 🖥️ Menú interactivo
+
+Después de instalar, todo se gestiona desde un solo comando:
+
+```bash
+./antigravity.sh
+```
+
+El menú muestra:
+
+```
+  ╔═══════════════════════════════════════════════╗
+  ║                                               ║
+  ║   🌌  Google Antigravity IDE                  ║
+  ║   Termux · Debian · Android · ARM64           ║
+  ║                                               ║
+  ╠═══════════════════════════════════════════════╣
+  ║  Autor   @maka0024 · kuromi04                 ║
+  ║  GitHub  kuromi04/termux-antigravity          ║
+  ║  Versión 1.16.5                               ║
+  ║  Estado  ● Instalado                          ║
+  ╚═══════════════════════════════════════════════╝
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    MENÚ PRINCIPAL
+  ─────────────────────────────────────────────────
+
+    1  ▶  Iniciar Antigravity
+    2  ↻  Actualizar Antigravity
+    3  ■  Detener y limpiar sesión
+    4  ⚙  Abrir Debian (terminal)
+    5  ✕  Desinstalar Antigravity
+
+  ─────────────────────────────────────────────────
+    0  Salir
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## ✨ Funciones del menú
+
+### 1 ▶ Iniciar Antigravity
+Entra a Debian como `devroom` y lanza el IDE. Abre la app **Termux:X11** automáticamente con `fluxbox` + `thunar` + Antigravity.
+
+### 2 ↻ Actualizar Antigravity
+Descarga la última versión del binario ARM64 desde los servidores de Google, reemplaza el binario existente y restaura automáticamente tu configuración de usuario, scripts personalizados y datos de sesión.
+
+### 3 ■ Detener y limpiar sesión
+Tres niveles de limpieza:
+- **Solo detener** — mata los procesos de Antigravity, Fluxbox, X11 y la sesión proot de Debian.
+- **Detener + limpiar logs** — además elimina los logs de sesión de Debian y Termux.
+- **Detener + limpiar logs + caché** — limpieza completa incluyendo la caché de Antigravity.
+
+### 4 ⚙ Abrir Debian (terminal)
+Acceso directo a la terminal de Debian como root para tareas de administración.
+
+### 5 ✕ Desinstalar Antigravity
+Dos modos:
+- **Conservar datos** — elimina el binario y scripts pero conserva la configuración del usuario.
+- **Eliminar todo** — limpieza completa: binario, scripts, datos, logs y caché. Pide confirmación antes de proceder.
+
+---
+
 ## 🏗️ Cómo funciona
 
 ```
@@ -43,45 +108,8 @@ Termux
 │       ├── usuario devroom         ← entorno aislado
 │       └── /Apps/IDE/Antigravity/
 │           └── bin/antigravity --no-sandbox
-└── Termux:X11 ← display :1 (interfaz gráfica en Android)
+└── Termux:X11 ← display :1
 ```
-
-El instalador hace todo en orden:
-
-| Paso | Qué ocurre |
-|------|-----------|
-| 1 | Verifica permisos de almacenamiento |
-| 2 | Instala `proot-distro`, `aria2`, `termux-x11` en Termux |
-| 3 | Instala **Debian** vía `proot-distro` |
-| 4 | Descarga el **binario oficial ARM64** de Antigravity (~300 MB) vía `aria2c` |
-| 5 | Extrae Antigravity en `/Apps/IDE/Antigravity/` dentro de Debian |
-| 6 | Al primer login en Debian instala `fluxbox`, `thunar`, `firefox-esr` y todas las dependencias |
-| 7 | Crea el usuario `devroom` sin contraseña con permisos sudo |
-| 8 | Genera los scripts `antigravity.sh`, `startantigravity.sh` y `uninstall.sh` |
-
----
-
-## 🖥️ Uso diario
-
-Una vez instalado, para abrir Antigravity ejecuta desde **Termux**:
-
-```bash
-./antigravity.sh
-```
-
-Esto entra a Debian como `devroom` y muestra el menú:
-
-```
---------------------
-¿Qué quieres hacer con Google Antigravity?
---------------------
-1. Iniciar Antigravity
-2. Desinstalar
-Otro. Salir y usar Debian
---------------------
-```
-
-Al elegir **1**, se abre la app **Termux:X11** automáticamente con el escritorio Fluxbox y Antigravity IDE.
 
 ---
 
@@ -104,7 +132,7 @@ Al elegir **1**, se abre la app **Termux:X11** automáticamente con el escritori
 
 ---
 
-## 🗂️ Archivos del repositorio
+## 🗂️ Archivos
 
 ```
 termux-antigravity/
@@ -112,7 +140,7 @@ termux-antigravity/
 │   └── workflows/
 │       └── shellcheck.yml
 ├── installantigravity.sh   ← instalador completo (un solo uso)
-├── antigravity.sh          ← lanzador diario
+├── antigravity.sh          ← menú interactivo principal
 ├── README.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -123,44 +151,42 @@ termux-antigravity/
 
 ## 🔧 Solución de Problemas
 
-**La pantalla de Termux:X11 aparece en negro**  
-Abre la app **Termux:X11** manualmente antes de elegir "Iniciar" en el menú.
+**Pantalla negra en Termux:X11**  
+Abre la app Termux:X11 manualmente antes de elegir "Iniciar" en el menú.
 
-**Error al descargar Antigravity**  
-El binario pesa ~300 MB. Si la descarga falla, vuelve a ejecutar el instalador. `aria2c` usa 4 conexiones paralelas para mayor velocidad.
+**Error al actualizar / descargar**  
+Verifica tu conexión. El binario pesa ~300 MB. Usa la opción 2 del menú para reintentar.
 
-**"Antigravity no está instalado" al ejecutar `./antigravity.sh`**  
-La instalación no completó. Vuelve a ejecutar el comando de instalación completo.
+**"Antigravity no está instalado"**  
+Ejecuta el comando de instalación completo desde la sección ⚡.
 
 **Debian no arranca**  
 ```bash
 proot-distro list
-# Si debian no aparece:
-proot-distro install debian
+proot-distro install debian   # si no aparece en la lista
 ```
 
 ---
 
 ## 🤝 Contribuir
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos, especialmente para:
-
-- Actualización del binario ARM64 de Antigravity a versiones nuevas
-- Soporte para otras distribuciones (Ubuntu, Alpine)
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos para:
+- Actualización del binario ARM64 a versiones nuevas
 - Mejoras en el menú interactivo
+- Soporte para otras distribuciones
 
 ---
 
 ## 🛡️ Seguridad y Ética
 
-Distribuido **únicamente con fines educativos**, bajo los principios de Hacking Ético de [I-HAKLAB](https://github.com/ivam3/i-Haklab). Consulta [SECURITY.md](SECURITY.md) para reportar vulnerabilidades.
+Distribuido **únicamente con fines educativos**, bajo los principios de Hacking Ético de [I-HAKLAB](https://github.com/ivam3/i-Haklab).
 
 ---
 
 ## 💜 Créditos
 
 - **[ivam3](https://github.com/ivam3)** — por sus enseñanzas y la comunidad [ivam3bycinderella](https://github.com/ivam3).
-
+- **[AnBui2004](https://github.com/AnBui2004)** — por el instalador de referencia.
 - **Comunidad Termux** — por mantener un ecosistema Linux increíble en Android.
 
 ---
