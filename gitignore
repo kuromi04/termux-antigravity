@@ -3,3 +3,9 @@
 .DS_Store
 node_modules/
 installantigravity.sh
+
+# Archivos de versiones anteriores (Alpine) — NO deben estar en el repo
+install.sh
+start-gui.sh
+stop-gui.sh
+antigravity-alpine.sh

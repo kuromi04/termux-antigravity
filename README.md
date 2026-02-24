@@ -32,17 +32,17 @@ curl -H 'Cache-Control: no-cache' -o installantigravity.sh \
   && clear
 ```
 
+Al terminar, el menú principal se abre **automáticamente**.
+
 ---
 
 ## 🖥️ Menú interactivo
 
-Después de instalar, todo se gestiona desde un solo comando:
+Después de instalar, abre el menú con:
 
 ```bash
 ./antigravity.sh
 ```
-
-El menú muestra:
 
 ```
   ╔═══════════════════════════════════════════════╗
@@ -53,7 +53,6 @@ El menú muestra:
   ╠═══════════════════════════════════════════════╣
   ║  Autor   @maka0024 · kuromi04                 ║
   ║  GitHub  kuromi04/termux-antigravity          ║
-  ║  Versión 1.16.5                               ║
   ║  Estado  ● Instalado                          ║
   ╚═══════════════════════════════════════════════╝
 
@@ -76,25 +75,15 @@ El menú muestra:
 
 ## ✨ Funciones del menú
 
-### 1 ▶ Iniciar Antigravity
-Entra a Debian como `devroom` y lanza el IDE. Abre la app **Termux:X11** automáticamente con `fluxbox` + `thunar` + Antigravity.
+**1 ▶ Iniciar** — entra a Debian como `devroom` y lanza Antigravity IDE con X11, Fluxbox y Thunar.
 
-### 2 ↻ Actualizar Antigravity
-Descarga la última versión del binario ARM64 desde los servidores de Google, reemplaza el binario existente y restaura automáticamente tu configuración de usuario, scripts personalizados y datos de sesión.
+**2 ↻ Actualizar** — descarga la nueva versión del binario ARM64, hace backup de tus scripts y configuración, reemplaza solo el binario y restaura todo lo demás.
 
-### 3 ■ Detener y limpiar sesión
-Tres niveles de limpieza:
-- **Solo detener** — mata los procesos de Antigravity, Fluxbox, X11 y la sesión proot de Debian.
-- **Detener + limpiar logs** — además elimina los logs de sesión de Debian y Termux.
-- **Detener + limpiar logs + caché** — limpieza completa incluyendo la caché de Antigravity.
+**3 ■ Detener y limpiar** — tres niveles: solo matar procesos / + limpiar logs / + limpiar logs y caché completa.
 
-### 4 ⚙ Abrir Debian (terminal)
-Acceso directo a la terminal de Debian como root para tareas de administración.
+**4 ⚙ Terminal Debian** — acceso directo a Debian como root para administración.
 
-### 5 ✕ Desinstalar Antigravity
-Dos modos:
-- **Conservar datos** — elimina el binario y scripts pero conserva la configuración del usuario.
-- **Eliminar todo** — limpieza completa: binario, scripts, datos, logs y caché. Pide confirmación antes de proceder.
+**5 ✕ Desinstalar** — dos modos (conservar datos / eliminar todo) con confirmación obligatoria.
 
 ---
 
@@ -127,19 +116,18 @@ Termux
 
 ### Software
 
-- [Termux](https://f-droid.org/en/packages/com.termux/) — **instalar desde F-Droid**, no desde Play Store
-- [Termux:X11](https://github.com/termux/termux-x11/releases) — app del servidor gráfico
+- [Termux](https://f-droid.org/en/packages/com.termux/) — **desde F-Droid**, no desde Play Store
+- [Termux:X11](https://github.com/termux/termux-x11/releases) — servidor gráfico para Android
 
 ---
 
-## 🗂️ Archivos
+## 🗂️ Estructura del repositorio
 
 ```
 termux-antigravity/
 ├── .github/
 │   └── workflows/
 │       └── shellcheck.yml
-├── installantigravity.sh   ← instalador completo (un solo uso)
 ├── antigravity.sh          ← menú interactivo principal
 ├── README.md
 ├── CONTRIBUTING.md
@@ -147,33 +135,33 @@ termux-antigravity/
 └── LICENSE
 ```
 
+> `installantigravity.sh` **no está en el repositorio** — se descarga directamente con `curl`
+> al instalarlo y se borra al terminar. El menú `antigravity.sh` sí queda en tu HOME de Termux.
+
 ---
 
 ## 🔧 Solución de Problemas
 
-**Pantalla negra en Termux:X11**  
-Abre la app Termux:X11 manualmente antes de elegir "Iniciar" en el menú.
+**Pantalla negra en Termux:X11**
+Abre la app Termux:X11 manualmente antes de elegir "Iniciar".
 
-**Error al actualizar / descargar**  
-Verifica tu conexión. El binario pesa ~300 MB. Usa la opción 2 del menú para reintentar.
+**Error al descargar Antigravity**
+El binario pesa ~300 MB. Verifica tu conexión y ejecuta de nuevo el instalador.
 
-**"Antigravity no está instalado"**  
-Ejecuta el comando de instalación completo desde la sección ⚡.
+**El menú no se abre al terminar la instalación**
+Ejecuta manualmente: `./antigravity.sh`
 
-**Debian no arranca**  
+**Debian no arranca**
 ```bash
 proot-distro list
-proot-distro install debian   # si no aparece en la lista
+proot-distro install debian   # si no aparece
 ```
 
 ---
 
 ## 🤝 Contribuir
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos para:
-- Actualización del binario ARM64 a versiones nuevas
-- Mejoras en el menú interactivo
-- Soporte para otras distribuciones
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos para actualización del binario ARM64 y mejoras en el menú.
 
 ---
 
