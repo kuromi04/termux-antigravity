@@ -116,7 +116,7 @@ Termux
 
 ### Software
 
-- [Termux](https://f-droid.org/en/packages/com.termux/(https://github.com/termux)) — **desde Gitub**, no desde Play Store
+- [Termux](https://f-droid.org/en/packages/com.termux/(https://github.com/termux)) — **desde Github**, no desde Play Store
 - [Termux:X11](https://github.com/termux/termux-x11/releases) — servidor gráfico para Android
 
 ---
