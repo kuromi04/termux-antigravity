@@ -116,7 +116,7 @@ Termux
 
 ### Software
 
-- [Termux](https://f-droid.org/en/packages/com.termux/) — **desde F-Droid**, no desde Play Store
+- [Termux](https://f-droid.org/en/packages/com.termux/(https://github.com/termux)) — **desde Gitub**, no desde Play Store
 - [Termux:X11](https://github.com/termux/termux-x11/releases) — servidor gráfico para Android
 
 ---
@@ -174,7 +174,7 @@ Distribuido **únicamente con fines educativos**, bajo los principios de Hacking
 ## 💜 Créditos
 
 - **[ivam3](https://github.com/ivam3)** — por sus enseñanzas y la comunidad [ivam3bycinderella](https://github.com/ivam3).
-- **[AnBui2004](https://github.com/AnBui2004)** — por el instalador de referencia.
+
 - **Comunidad Termux** — por mantener un ecosistema Linux increíble en Android.
 
 ---
