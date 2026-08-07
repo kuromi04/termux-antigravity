@@ -1,155 +1,105 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# ============================================================
-#  Google Antigravity para Termux — Instalador PRO
-#  Autor: @maka0024 (kuromi04)
-#  Refactored by Gemini
-# ============================================================
+set -euo pipefail
 
-set -e # Salir en caso de error
-
-# ── Configuración ────────────────────────────────────────────
-DEBIAN_ROOT="$PREFIX/var/lib/proot-distro/installed-rootfs/debian"
-IDE_VERSION="1.23.2"
-IDE_BUILD="4781536860569600"
-ANTIGRAVITY_DL="https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/${IDE_VERSION}-${IDE_BUILD}/linux-arm/Antigravity.tar.gz"
-
-# ── Utilidades ───────────────────────────────────────────────
-info()    { echo -e "\e[1;34m[i]\e[0m \e[1;37m$1\e[0m"; }
-success() { echo -e "\e[1;32m[✓]\e[0m \e[1;37m$1\e[0m"; }
-warn()    { echo -e "\e[1;33m[!]\e[0m \e[1;37m$1\e[0m"; }
-error()   { echo -e "\e[1;31m[✗]\e[0m \e[1;37m$1\e[0m"; exit 1; }
-
-# ── PASO 0: Pre-vuelo (Validaciones) ─────────────────────────
-clear
-info "Verificando sistema..."
-
-# Arquitectura
-ARCH=$(uname -m)
-if [[ "$ARCH" != "aarch64" && "$ARCH" != "armv8l" ]]; then
-    error "Google Antigravity requiere ARM64. Tu arquitectura ($ARCH) no es compatible."
-fi
-
-# Almacenamiento
-FREE_SPACE=$(df "$PREFIX" | awk 'NR==2 {print $4}')
-if [ "$FREE_SPACE" -lt 4194304 ]; then
-    warn "Tienes menos de 4GB libres. La instalación podría fallar."
-    echo -ne "  ¿Deseas continuar de todas formas? (s/N): "; read -r -n 1 confirm; echo ""
-    [[ ! "$confirm" =~ [sS] ]] && exit 0
-fi
-
-# Permisos de almacenamiento
-if [ ! -d "$HOME/storage" ]; then
-    info "Concediendo permisos de almacenamiento..."
-    termux-setup-storage
-    warn "Por favor, acepta el permiso en la ventana emergente de Android."
-    until [ -d "$HOME/storage" ]; do sleep 1; done
-fi
-success "Sistema validado."
-
-# ── PASO 1: Paquetes base en Termux ─────────────────────────
-info "Actualizando paquetes de Termux..."
-apt update && apt upgrade -y
-apt install -y x11-repo
-apt install -y proot-distro aria2 termux-x11-nightly curl
-
-# ── PASO 2: Instalar Debian ──────────────────────────────────
-if [ -d "$DEBIAN_ROOT" ]; then
-    info "Debian ya está instalado, saltando paso..."
+# Language Detection
+if [[ "${LANG:-}" =~ "es" ]]; then
+    LANG_ES=true
 else
-    info "Instalando Debian vía proot-distro..."
-    proot-distro install debian
+    LANG_ES=false
 fi
 
-# ── PASO 3: Descargar e Instalar Antigravity ─────────────────
-info "Descargando Google Antigravity v$IDE_VERSION (~300 MB)..."
-mkdir -p "$DEBIAN_ROOT/Apps/IDE"
-cd "$DEBIAN_ROOT/Apps/IDE"
+# Curated Colors
+C_ACCENT='\e[38;2;168;85;247m' # Purple
+C_INFO='\e[38;2;56;189;248m'   # Light Blue
+C_SUCCESS='\e[38;2;52;211;153m' # Mint Green
+C_WARN='\e[38;2;251;191;36m'    # Amber
+C_NC='\e[0m'
 
-# Descarga rápida con aria2
-aria2c -x 8 -s 8 -o Antigravity.tar.gz "$ANTIGRAVITY_DL"
+msg_step() {
+    local step=$1
+    local en_msg=$2
+    local es_msg=$3
+    if [ "$LANG_ES" = true ]; then
+        echo -e "${C_ACCENT}🌌 [$step]${C_NC} ${C_INFO}${es_msg}${C_NC}"
+    else
+        echo -e "${C_ACCENT}🌌 [$step]${C_NC} ${C_INFO}${en_msg}${C_NC}"
+    fi
+}
 
-info "Instalando binario..."
-rm -rf Antigravity
-tar -xzf Antigravity.tar.gz
-rm -f Antigravity.tar.gz
-mv Antigravity-* Antigravity 2>/dev/null || true # Por si el tar tiene carpeta con versión
-chmod +x Antigravity/bin/antigravity
+msg_success() {
+    local en_msg=$1
+    local es_msg=$2
+    if [ "$LANG_ES" = true ]; then
+        echo -e "${C_SUCCESS}✨ $es_msg${C_NC}"
+    else
+        echo -e "${C_SUCCESS}✨ $en_msg${C_NC}"
+    fi
+}
 
-# ── PASO 4: Configuración interna de Debian (Automatizada) ───
-info "Configurando el interior de Debian (No interactivo)..."
+msg_info() {
+    local en_msg=$1
+    local es_msg=$2
+    if [ "$LANG_ES" = true ]; then
+        echo -e "${C_INFO}ℹ️  $es_msg${C_NC}"
+    else
+        echo -e "${C_INFO}ℹ️  $en_msg${C_NC}"
+    fi
+}
 
-# Comando masivo para ejecutar dentro de Debian
-proot-distro login debian -- sh -c "
-    apt update && apt upgrade -y
-    apt install -y sudo xterm thunar fluxbox aria2 firefox-esr \
-        libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
-        libcairo2 libcurl3-gnutls libcurl4 libdbus-1-3 libexpat1 \
-        libgbm1 libglib2.0-0 libgtk-3-0 libgtk-4-1 libnspr4 libnss3 \
-        libpango-1.0-0 libx11-6 libxcb1 libxcomposite1 libxdamage1 \
-        libxext6 libxfixes3 libxkbcommon0 libxkbfile1 libxrandr2 xdg-utils
-    
-    # Crear usuario devroom si no existe
-    id -u devroom &>/dev/null || useradd -m devroom
-    passwd -d devroom
-    usermod -s /bin/bash devroom
-    echo 'devroom ALL=(ALL) ALL' > /etc/sudoers.d/devroom
-    chmod 440 /etc/sudoers.d/devroom
-"
+if [ "$LANG_ES" = true ]; then
+    echo -e "${C_ACCENT}🚀 Iniciando instalación de Termux-Antigravity...${C_NC}"
+else
+    echo -e "${C_ACCENT}🚀 Starting Termux-Antigravity Installation...${C_NC}"
+fi
 
-# ── PASO 5: Crear scripts de lanzamiento ─────────────────────
-info "Creando scripts de ayuda..."
+msg_step "1/7" "Installing Termux packages..." "Instalando paquetes de Termux..."
+pkg install -y x11-repo
+pkg install -y proot-distro pulseaudio patchelf-glibc glibc-repo libxcomposite-glibc libxfixes-glibc libxext-glibc libxrandr-glibc libxkbcommon-glibc pango-glibc libcairo-glibc alsa-lib-glibc
 
-# Script GUI (dentro de Antigravity)
-cat > "$DEBIAN_ROOT/Apps/IDE/Antigravity/launch-ide.sh" << 'EOF'
+msg_step "2/7" "Checking Debian installation..." "Verificando instalación de Debian..."
+if [ ! -d "/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian" ]; then
+    msg_info "Installing debian via proot-distro..." "Instalando debian vía proot-distro..."
+    proot-distro install debian
+else
+    msg_success "Debian is already installed." "Debian ya está instalado."
+fi
+
+msg_step "3/7" "Installing GUI libraries in Debian..." "Instalando librerías GUI en Debian..."
+proot-distro login debian -- sh -c "apt update && apt install -y ca-certificates curl gnupg libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 libdbus-1-3 libdrm2 libexpat1 libgbm1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxkbfile1 libxrandr2 gcc"
+
+AGY_DIR="$HOME/.local/share/antigravity"
+mkdir -p "$AGY_DIR"
+cd "$AGY_DIR"
+
+msg_step "4/7" "Downloading Antigravity..." "Descargando Antigravity..."
+curl -L -o Antigravity.tar.gz "https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/1.23.2-4781536860569600/linux-arm/Antigravity.tar.gz"
+
+msg_step "5/7" "Extracting Antigravity..." "Extrayendo Antigravity..."
+tar -xzf Antigravity.tar.gz --strip-components=1
+rm Antigravity.tar.gz
+
+msg_step "6/7" "Compiling localtime fix..." "Compilando parche localtime..."
+cat << 'EOF' > "$AGY_DIR/localtime_fix.c"
+#include <time.h>
+struct tm *localtime64(const time_t *timep) {
+    return localtime(timep);
+}
+struct tm *localtime64_r(const time_t *timep, struct tm *result) {
+    return localtime_r(timep, result);
+}
+EOF
+proot-distro login debian -- gcc -shared -fPIC -o /data/data/com.termux/files/home/.local/share/antigravity/liblocaltime_fix.so /data/data/com.termux/files/home/.local/share/antigravity/localtime_fix.c
+
+msg_step "7/7" "Patching interpreter and creating launcher..." "Parcheando intérprete y creando lanzador..."
+patchelf --set-interpreter /data/data/com.termux/files/usr/glibc/lib/ld-linux-aarch64.so.1 "$AGY_DIR/antigravity"
+
+WRAPPER="/data/data/com.termux/files/usr/bin/antigravity"
+cat << 'EOF' > "$WRAPPER"
 #!/data/data/com.termux/files/usr/bin/bash
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity && \
-termux-x11 -xstartup "bash -c 'fluxbox & thunar & /Apps/IDE/Antigravity/bin/antigravity --no-sandbox && sleep infinity'"
+export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/glibc/lib:/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/usr/lib/aarch64-linux-gnu:/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/lib/aarch64-linux-gnu"
+export LD_PRELOAD="/data/data/com.termux/files/home/.local/share/antigravity/liblocaltime_fix.so"
+exec /data/data/com.termux/files/home/.local/share/antigravity/antigravity --no-sandbox "$@"
 EOF
-chmod +x "$DEBIAN_ROOT/Apps/IDE/Antigravity/launch-ide.sh"
+chmod +x "$WRAPPER"
 
-# Script de inicio para devroom
-cat > "$DEBIAN_ROOT/Apps/IDE/Antigravity/startantigravity.sh" << 'EOF'
-#!/bin/bash
-sed -i "/startantigravity.sh/d" "$HOME/.profile" 2>/dev/null
-clear
-echo -e "\e[1;34m🌌 Google Antigravity\e[0m"
-echo -e "--------------------"
-echo -e "1. Iniciar Antigravity"
-echo -e "2. Desinstalar"
-echo -e "3. Salir"
-echo -e "--------------------"
-read -r -n 1 option
-case "$option" in
-    1) /Apps/IDE/Antigravity/launch-ide.sh ;;
-    2) /Apps/IDE/Antigravity/uninstall.sh ;;
-    *) exit 0 ;;
-esac
-EOF
-chmod +x "$DEBIAN_ROOT/Apps/IDE/Antigravity/startantigravity.sh"
-
-# Script para root -> devroom
-cat > "$DEBIAN_ROOT/root/antigravity.sh" << 'EOF'
-#!/bin/bash
-sed -i "/startantigravity.sh/d" /home/devroom/.profile 2>/dev/null
-echo "/Apps/IDE/Antigravity/startantigravity.sh" >> /home/devroom/.profile
-su - devroom
-EOF
-chmod +x "$DEBIAN_ROOT/root/antigravity.sh"
-
-# ── PASO 6: Instalar menú en Termux ──────────────────────────
-info "Instalando menú principal en Termux..."
-curl -s -o "$HOME/antigravity.sh" "https://raw.githubusercontent.com/kuromi04/termux-antigravity/main/antigravity.sh"
-chmod +x "$HOME/antigravity.sh"
-
-# ── PASO 7: Finalización ─────────────────────────────────────
-clear
-echo -e "\e[1;32m"
-echo "  ╔══════════════════════════════════════════════╗"
-echo "  ║      ¡INSTALACIÓN COMPLETADA CON ÉXITO!      ║"
-echo "  ╚══════════════════════════════════════════════╝"
-echo -e "\e[0m"
-info "Puedes iniciar el menú con: ./antigravity.sh"
-echo ""
-sleep 2
-
-exec bash "$HOME/antigravity.sh"
+msg_success "Installation completed successfully!" "¡Instalación completada exitosamente!"

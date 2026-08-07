@@ -1,27 +1,31 @@
 # 🌌 Termux-Antigravity
-### *Google Antigravity IDE · Termux · Debian · X11*
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://android.com)
-[![Distro](https://img.shields.io/badge/Distro-Debian-a80030?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org)
 [![Termux](https://img.shields.io/badge/Termux-X11-f97316?style=for-the-badge&logo=gnometerminal&logoColor=white)](https://termux.dev/)
-[![ShellCheck](https://img.shields.io/github/actions/workflow/status/kuromi04/termux-antigravity/shellcheck.yml?label=ShellCheck&style=for-the-badge&logo=gnubash&logoColor=white)](https://github.com/kuromi04/termux-antigravity/actions)
 
-<br/>
-
-> **Google Antigravity IDE en Android con un solo comando.**  
-> Corre Debian dentro de Termux vía `proot-distro`, descarga el binario oficial ARM64  
-> y gestiona todo desde un menú interactivo profesional.
+> **Google Antigravity IDE natively on Android with Termux.**  
+> Utilizes a native glibc patch to bypass `proot-distro` container overhead at runtime, achieving unprecedented X11 fluidity.  
+> *Ejecuta Google Antigravity nativamente usando un parche glibc que libera toda la fluidez de X11.*
 
 </div>
 
 ---
 
-## ⚡ Instalación — Un solo comando
+## 🌎 Language Support / Soporte de Idioma
 
-Abre **Termux** y pega esto:
+This project supports **English** and **Spanish**. The installer and main menu automatically detect your system language. You can also toggle the language directly from the main menu at any time!
+
+*Este proyecto soporta **Inglés** y **Español**. El instalador y el menú principal detectan automáticamente el idioma de tu sistema. ¡También puedes cambiar el idioma directamente desde el menú principal en cualquier momento!*
+
+---
+
+## ⚡ Installation / Instalación
+
+Run the following command in Termux:  
+*Ejecuta el siguiente comando en Termux:*
 
 ```bash
 curl -H 'Cache-Control: no-cache' -o installantigravity.sh \
@@ -32,163 +36,73 @@ curl -H 'Cache-Control: no-cache' -o installantigravity.sh \
   && clear
 ```
 
-Al terminar, el menú principal se abre **automáticamente**.
+Once completed, the main menu will open automatically.  
+*Al terminar, el menú principal se abrirá automáticamente.*
 
 ---
 
-## 🖥️ Menú interactivo
+## 🚀 Usage / Uso
 
-Después de instalar, abre el menú con:
+Open the interactive menu anytime with:  
+*Abre el menú interactivo en cualquier momento con:*
 
 ```bash
 ./antigravity.sh
 ```
 
-```
-  ╔═══════════════════════════════════════════════╗
-  ║                                               ║
-  ║   🌌  Google Antigravity IDE                  ║
-  ║   Termux · Debian · Android · ARM64           ║
-  ║                                               ║
-  ╠═══════════════════════════════════════════════╣
-  ║  Autor   @maka0024 · kuromi04                 ║
-  ║  GitHub  kuromi04/termux-antigravity          ║
-  ║  Estado  ● Instalado                          ║
-  ╚═══════════════════════════════════════════════╝
+### Menu Options / Opciones del menú
 
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    MENÚ PRINCIPAL
-  ─────────────────────────────────────────────────
+1. **Start Antigravity / Iniciar Antigravity**: Launches the X11 server and the native glibc patched IDE.
+2. **Re-run Installer / Reinstalar**: Re-runs the installation process and updates files.
+3. **Stop and clean session / Detener y limpiar**: Kills background X11 and PulseAudio processes cleanly.
+4. **Uninstall / Desinstalar**: Safely removes all installed files.
+5. **Toggle Language / Cambiar Idioma**: Switch between English and Spanish.
 
-    1  ▶  Iniciar Antigravity
-    2  ↻  Actualizar IDE (v1.23.2)
-    3  ■  Detener y limpiar sesión
-    4  ⚙  Terminal Debian (root)
-    5  ☁  Actualizar Script (GitHub)
-    6  ✕  Desinstalar Antigravity
+---
 
-  ─────────────────────────────────────────────────
-    0  Salir
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## 🏗️ Architecture: Native glibc execution
+
+Termux-Antigravity now implements **a new native glibc patching method**! ("la nueva forma de parche q abra fluidez en X11")  
+Instead of running the entire IDE inside a `proot-distro` container which introduces substantial overhead, we use Termux's `glibc-repo` and `patchelf-glibc` to run the ARM64 binary directly on Termux, only using `proot-distro` to borrow missing Debian libraries via `LD_LIBRARY_PATH`.
+
+```mermaid
+graph TD
+    A[Termux App] --> B[antigravity.sh Menu]
+    B --> C[Termux:X11 Server]
+    B --> D[Native glibc patched binary]
+    D -.->|LD_LIBRARY_PATH| E[proot-distro / Debian Libs]
+    D --> F[Fluid X11 Rendering]
 ```
 
----
+### 📋 Requirements / Requisitos
 
-## ✨ Funciones del menú
+| Component / Componente | Minimum / Mínimo | Recommended / Recomendado |
+|------------------------|-----------------|---------------------------|
+| **SoC**                | Snapdragon 700  | Snapdragon 8+ Gen 1+      |
+| **RAM**                | 6 GB            | 8 GB+                     |
+| **Storage / Almacen.** | 4 GB free       | 8 GB free                 |
+| **Android Version**    | Android 10+     | Android 12+               |
 
-**1 ▶ Iniciar** — entra a Debian como `devroom` y lanza Antigravity IDE con X11, Fluxbox y Thunar.
-
-**2 ↻ Actualizar IDE** — descarga la nueva versión del binario ARM64 (v1.23.2), realiza backups de seguridad y restaura tu configuración automáticamente.
-
-**3 ■ Detener y limpiar** — tres niveles de limpieza: solo procesos / + logs / + caché completa.
-
-**4 ⚙ Terminal Debian** — acceso directo a Debian como root para administración avanzada.
-
-**5 ☁ Actualizar Script** — **NUEVO:** busca y descarga la última versión del menú directamente desde GitHub.
-
-**6 ✕ Desinstalar** — elimina Antigravity con opción de conservar o borrar todos los datos de usuario.
+**Required Apps / Apps Requeridas:**
+- [Termux](https://github.com/termux) (from GitHub, NOT Play Store)
+- [Termux:X11](https://github.com/termux/termux-x11/releases)
 
 ---
 
-## 🏗️ Cómo funciona
+## 🔧 Troubleshooting / Solución de Problemas
 
-El instalador ha sido modernizado para ser **totalmente automático** y robusto:
-- **Validación de Sistema:** Verifica arquitectura ARM64 y espacio en disco (4GB min).
-- **Instalación Silenciosa:** Configura Debian y paquetes internos sin requerir intervención del usuario.
-- **Manejo de Errores:** Incluye `set -e` y validaciones en cada paso crítico.
+- **Black screen on Termux:X11 / Pantalla negra en Termux:X11**  
+  Ensure the Termux:X11 app is open in the background before selecting "Start" in the menu.  
+  *Asegúrate de que la app Termux:X11 esté abierta antes de elegir "Iniciar".*
 
-```
-Termux
-├── proot-distro
-│   └── Debian
-│       ├── fluxbox + thunar        ← escritorio gráfico
-│       ├── usuario devroom         ← entorno aislado
-│       └── /Apps/IDE/Antigravity/
-│           └── bin/antigravity --no-sandbox
-└── Termux:X11 ← display :1
-```
+- **X11 Server did not respond / El servidor X11 no respondió**  
+  You may need to manually start Termux:X11. Clean your session using option 3 in the menu and try again.  
+  *Limpia la sesión usando la opción 3 en el menú y vuelve a intentar.*
 
 ---
 
-## 📋 Requisitos
+## 💜 Credits / Créditos
 
-### Hardware
-
-| Componente | Mínimo | Recomendado |
-|------------|--------|-------------|
-| **SoC** | Snapdragon 700 / Dimensity 900 | Snapdragon 8+ Gen 1 o superior |
-| **RAM** | 6 GB | 8 GB o más |
-| **Almacenamiento** | 4 GB libres | 8 GB libres |
-| **Pantalla** | 6.5" smartphone | 10.1" tablet |
-| **Android** | 10+ | 12+ |
-
-### Software
-
-- [Termux](https://github.com/termux) — **desde Github**, no desde Play Store
-- [Termux:X11](https://github.com/termux/termux-x11/releases) — servidor gráfico para Android
-
----
-
-## 🗂️ Estructura del repositorio
-
-```
-termux-antigravity/
-├── .github/
-│   └── workflows/
-│       └── shellcheck.yml
-├── antigravity.sh          ← menú interactivo principal
-├── README.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── LICENSE
-```
-
-> `installantigravity.sh` **no está en el repositorio** — se descarga directamente con `curl`
-> al instalarlo y se borra al terminar. El menú `antigravity.sh` sí queda en tu HOME de Termux.
-
----
-
-## 🔧 Solución de Problemas
-
-**Pantalla negra en Termux:X11**
-Abre la app Termux:X11 manualmente antes de elegir "Iniciar".
-
-**Error al descargar Antigravity**
-El binario pesa ~300 MB. Verifica tu conexión y ejecuta de nuevo el instalador.
-
-**El menú no se abre al terminar la instalación**
-Ejecuta manualmente: `./antigravity.sh`
-
-**Debian no arranca**
-```bash
-proot-distro list
-proot-distro install debian   # si no aparece
-```
-
----
-
-## 🤝 Contribuir
-
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests bienvenidos para actualización del binario ARM64 y mejoras en el menú.
-
----
-
-## 🛡️ Seguridad y Ética
-
-Distribuido **únicamente con fines educativos**, bajo los principios de Hacking Ético de [I-HAKLAB](https://github.com/ivam3/i-Haklab).
-
----
-
-## 💜 Créditos
-
-- **[ivam3](https://github.com/ivam3)** — por sus enseñanzas y la comunidad [ivam3bycinderella](https://github.com/ivam3).
-
-- **Comunidad Termux** — por mantener un ecosistema Linux increíble en Android.
-
----
-
-<div align="center">
-
-Desarrollado con 💜 por **[@maka0024 · kuromi04](https://github.com/kuromi04)**
-
-</div>
+- **[ivam3](https://github.com/ivam3)** — For the guidance and the [ivam3bycinderella](https://github.com/ivam3) community.
+- **Termux Community** — For maintaining an incredible Linux ecosystem on Android.
+- Developed with 💜 by **[@maka0024 · kuromi04](https://github.com/kuromi04)**
