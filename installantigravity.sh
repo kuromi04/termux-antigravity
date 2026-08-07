@@ -102,4 +102,31 @@ exec /data/data/com.termux/files/home/.local/share/antigravity/antigravity --no-
 EOF
 chmod +x "$WRAPPER"
 
+# Create X11 xstartup script
+mkdir -p "$HOME/.termux/x11"
+XSTARTUP="$HOME/.termux/x11/xstartup"
+cat << 'EOF' > "$XSTARTUP"
+#!/data/data/com.termux/files/usr/bin/bash
+# Termux-Antigravity X11 Startup Script
+
+if ! pgrep -x "pulseaudio" > /dev/null; then
+    pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null || true
+fi
+
+if pgrep -x "xfwm4" > /dev/null || pgrep -x "fluxbox" > /dev/null || pgrep -x "openbox" > /dev/null; then
+    echo "Window manager is already running."
+else
+    if command -v xfwm4 &>/dev/null; then
+        xfwm4 &
+    elif command -v fluxbox &>/dev/null; then
+        fluxbox &
+    elif command -v openbox &>/dev/null; then
+        openbox &
+    fi
+fi
+
+exec /data/data/com.termux/files/usr/bin/antigravity --no-sandbox "$@"
+EOF
+chmod +x "$XSTARTUP"
+
 msg_success "Installation completed successfully!" "¡Instalación completada exitosamente!"
